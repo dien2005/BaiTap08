@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>GraphQL Demo</title>
+</head>
+<body>
+  <h1>Products sorted by price (asc)</h1>
+  <button id="loadSorted">Load products</button>
+  <ul id="productsList"></ul>
+
+  <script>
+    const endpoint = '/graphql';
+
+    async function graphqlQuery(query, variables = {}) {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables })
+      });
+      return res.json();
+    }
+
+    document.getElementById('loadSorted').addEventListener('click', async () => {
+      const q = `
+        query {
+          productsSortedByPrice {
+            id title desc price quantity owner { id fullname }
+            categories { id name }
+          }
+        }
+      `;
+      const data = await graphqlQuery(q);
+      const list = document.getElementById('productsList');
+      list.innerHTML = '';
+      if (data.errors) {
+        list.innerHTML = '<li>Error: ' + JSON.stringify(data.errors) + '</li>';
+        return;
+      }
+      data.data.productsSortedByPrice.forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = `${p.title} - ${p.price} - owner: ${p.owner ? p.owner.fullname : 'N/A'}`;
+        list.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>
